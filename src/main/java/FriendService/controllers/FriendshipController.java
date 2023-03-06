@@ -1,12 +1,14 @@
 package FriendService.controllers;
 
 import FriendService.dto.FriendDTO;
+import FriendService.dto.FriendNameDTO;
 import FriendService.services.FriendService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+import security.TokenAuthentication;
+
 import java.util.List;
 
 
@@ -20,20 +22,20 @@ public class FriendshipController {
 
     @PutMapping("/{id}/approve")
     @Operation(summary = "Подтверждение дружбы")
-    public void approveFriendRequest(@PathVariable Long id){
-        friendService.approveFriendRequest(id);
+    public void approveFriendRequest(@PathVariable Long id, TokenAuthentication authentication){
+        friendService.approveFriendRequest(id, authentication.getTokenData().getEmail());
     }
 
     @PutMapping("/block/{id}")
     @Operation(summary = "Блокировка друга")
-    public void blockFriend(@PathVariable Long id){
-        friendService.blockFriend(id);
+    public void blockFriend(TokenAuthentication authentication, @PathVariable Long id){
+        friendService.blockFriend(authentication.getTokenData().getEmail(), id);
     }
 
     @PostMapping("/{id}/request")
     @Operation(summary = "Добавление друга")
-    public void sendFriendshipRequest(@PathVariable Long id){
-        friendService.sendFriendshipRequest(id);
+    public void sendFriendshipRequest(TokenAuthentication authentication, @PathVariable Long id){
+        friendService.sendFriendshipRequest(authentication.getTokenData().getEmail(), id);
     }
 
     @PostMapping("/subscribe/{id}")
@@ -44,54 +46,63 @@ public class FriendshipController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удаление друга")
-    public void delete(@PathVariable Long id){
-        friendService.delete(id);
+    public void delete(@PathVariable Long id, TokenAuthentication authentication){
+        friendService.delete(id, authentication.getTokenData().getEmail());
     }
 
-
-  @GetMapping
-  @ResponseBody
- @Operation(summary = "Получение всех друзей")
-  public List<FriendDTO> getAllFriends(){
-       return friendService.getAllFriends();
-  }
+    @GetMapping
+    @ResponseBody
+    @Operation(summary = "Получение всех друзей")
+    public List<FriendDTO> getAllFriends(TokenAuthentication authentication){
+        return friendService.getAllFriends(authentication.getTokenData().getEmail());
+    }
 
     @GetMapping("{accountId}")
     @Operation(summary = "Получение друга по id")
-    public FriendDTO getFriendById(@PathVariable Long accountId){
-        return friendService.getFriendById(accountId);
+    public FriendDTO getFriendById(TokenAuthentication authentication, @PathVariable Long accountId){
+        return friendService.getFriendById(authentication.getTokenData().getEmail(), accountId);
     }
 
     @GetMapping("/ids")
     @Operation(summary = "Получение id друзей")
-    public List<Long> getFriendId(){
-        return friendService.getFriendId();
+    public List<Long> getFriendId(TokenAuthentication authentication){
+        return friendService.getFriendId(authentication.getTokenData().getEmail());
     }
 
     @GetMapping("/count")
-    @Operation(summary = "Получение количества друзей")
-    public Long getFriendCount(){
-        return friendService.getFriendCount();
+    @Operation(summary = "Получение количества запросов в друзья")
+    public Long getFriendCount(TokenAuthentication authentication){
+        return friendService.getFriendCount(authentication.getTokenData().getEmail());
     }
 
     @GetMapping("/ids/block")
     @Operation(summary = "Получение id заблокированных друзей")
-    public List<Long> getBlockFriendId(){
-        return friendService.getBlockFriendId();
+    public List<Long> getBlockFriendId(TokenAuthentication authentication){
+        return friendService.getBlockFriendId(authentication.getTokenData().getEmail());
     }
 
-    @GetMapping("/filter")
-    @Operation(summary = "Получение друзей с помощью фильтра")
-    public Page<FriendDTO> findAllFriends(
-            @RequestParam(name = "p", defaultValue = "1") Integer page,
-            @RequestParam(name = "firstName", required = false) String firstName,
-            @RequestParam(name = "lastName", required = false) String lastName
-           ) {
-        if (page < 1) {
-            page = 1;
-        }
-        return friendService.find(page, firstName, lastName);
+    @GetMapping("/requests")
+    @Operation(summary = "Получение входящих заявок в друзья")
+    public List<FriendDTO> getRequests(TokenAuthentication authentication){
+        return friendService.getRequests(authentication.getTokenData().getEmail());
     }
 
+    @GetMapping("/myrequests")
+    @Operation(summary = "Получение исходящих заявок в друзья")
+    public List<FriendDTO> getMyRequests(TokenAuthentication authentication){
+        return friendService.getMyRequests(authentication.getTokenData().getEmail());
+    }
+
+    @DeleteMapping("/{id}/cancelmyrequest")
+    @Operation(summary = "Отмена исходящей заявки")
+    public void cancelMyFriendRequest(@PathVariable Long id, TokenAuthentication authentication){
+        friendService.cancelMyFriendRequest(id, authentication.getTokenData().getEmail());
+    }
+
+    @DeleteMapping("/{id}/cancelrequest")
+    @Operation(summary = "Отмена входящей заявки")
+    public void cancelFriendRequest(@PathVariable Long id, TokenAuthentication authentication){
+        friendService.cancelFriendRequest(id, authentication.getTokenData().getEmail());
+    }
 
 }
